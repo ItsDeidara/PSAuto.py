@@ -1,0 +1,1 @@
+{"name": "ClickerHeroes-Auto", "steps": [[{"type": "autoclicker", "button": "SQUARE", "interval": 50, "duration": null}, 0], ["DOWN", 100], ["CROSS", 100], ["CROSS", 100], ["CROSS", 100], ["CROSS", 100], ["CROSS", 100], ["CROSS", 100], ["CROSS", 100], ["CROSS", 100], ["CROSS", 100], ["CROSS", 100]], "end_of_loop_macro": [["R2", 200]], "end_of_loop_macro_name": null}
