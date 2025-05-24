@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>PSAutoClicker Web Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <script src="https://unpkg.com/blockly/blockly.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; background: #181a20; color: #e0e0e0; }
+        h1, h2 { color: #e0e0e0; }
+        .section { margin-bottom: 2em; }
+        label { display: inline-block; width: 100px; }
+        select, input, button, textarea {
+            margin: 0.2em;
+            background: #23272f;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 4px;
+        }
+        select:focus, input:focus, textarea:focus {
+            outline: 2px solid #4e8cff;
+        }
+        button {
+            background: #23272f;
+            color: #e0e0e0;
+            border: 1px solid #4e8cff;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #4e8cff;
+            color: #fff;
+        }
+        pre {
+            background: #23272f;
+            color: #b8e994;
+            padding: 1em;
+            border-radius: 5px;
+            border: 1px solid #444;
+        }
+        .macro-step-list { max-height: 200px; overflow-y: auto; border: 1px solid #444; padding: 0.5em; background: #23272f; }
+        .macro-step { margin-bottom: 0.5em; }
+        #blocklyDiv { height: 350px; width: 100%; min-width: 600px; border: 1px solid #444; margin-bottom: 1em; background: #23272f; }
+        .device-form { display: flex; gap: 0.5em; align-items: center; margin-bottom: 0.5em; }
+    </style>
+</head>
+<body>
+    <h1>PSAutoClicker Web Dashboard</h1>
+    <div class="section">
+        <h2>Devices</h2>
+        <div class="device-form">
+            <input id="deviceLabel" placeholder="Label (optional)">
+            <input id="deviceHost" placeholder="Host/IP">
+            <button id="addDeviceBtn">Add</button>
+            <button id="editDeviceBtn">Edit</button>
+            <button id="removeDeviceBtn">Remove</button>
+        </div>
+        <select id="deviceList" style="min-width:300px;"></select>
+        <button id="connectDeviceBtn">Connect</button>
+        <button id="disconnectDeviceBtn">Disconnect</button>
+        <span id="connectionStatus"></span>
+    </div>
+    <div class="section">
+        <h2>Manual Controls</h2>
+        <div>
+            <label>Button:</label>
+            <select id="manualButton">
+                <option>UP</option><option>DOWN</option><option>LEFT</option><option>RIGHT</option>
+                <option>CROSS</option><option>CIRCLE</option><option>SQUARE</option><option>TRIANGLE</option>
+                <option>L1</option><option>L2</option><option>L3</option>
+                <option>R1</option><option>R2</option><option>R3</option>
+                <option>OPTIONS</option><option>SHARE</option><option>PS</option><option>TOUCHPAD</option>
+            </select>
+            <button id="sendManualButtonBtn">Send</button>
+        </div>
+        <div>
+            <label>Stick:</label>
+            <select id="manualStick">
+                <option value="LEFT_STICK">Left</option>
+                <option value="RIGHT_STICK">Right</option>
+            </select>
+            <select id="manualDirection">
+                <option>UP</option><option>DOWN</option><option>LEFT</option><option>RIGHT</option><option>NEUTRAL</option>
+            </select>
+            <input id="manualMagnitude" type="number" min="0" max="1" step="0.1" value="1.0" style="width:4em;">
+            <label>Duration (ms):</label><input id="manualStickDuration" type="number" min="0" value="1000" style="width:6em;">
+            <button id="sendManualStickBtn">Send</button>
+        </div>
+    </div>
+    <div class="section">
+        <h2>Manual Autoclicker</h2>
+        <label>Button:</label>
+        <select id="autoButton">
+            <option>UP</option><option>DOWN</option><option>LEFT</option><option>RIGHT</option>
+            <option>CROSS</option><option>CIRCLE</option><option>SQUARE</option><option>TRIANGLE</option>
+            <option>L1</option><option>L2</option><option>L3</option>
+            <option>R1</option><option>R2</option><option>R3</option>
+            <option>OPTIONS</option><option>SHARE</option><option>PS</option><option>TOUCHPAD</option>
+        </select>
+        <label>Interval (ms):</label><input id="autoInterval" type="number" min="10" value="100" style="width:6em;">
+        <label>Duration (ms, blank=infinite):</label><input id="autoDuration" type="number" min="0" style="width:8em;">
+        <button id="startManualAutoclickerBtn">Start</button>
+        <button id="stopManualAutoclickerBtn">Stop</button>
+    </div>
+    <div class="section">
+        <h2>Macros</h2>
+        <button id="refreshMacrosBtn" title="The macro list auto-refreshes every 30 seconds. Click to refresh manually.">Refresh Macros</button>
+        <label style="margin-left:1em;"><input type="checkbox" id="autoRefreshMacros" checked onchange="toggleAutoRefreshMacros()"> Auto-refresh</label>
+        <select id="macroList" onchange="editMacro()"></select>
+        <button id="runMacroBtn">Run Macro</button>
+        <button id="editMacroBtn">Edit</button>
+        <button id="deleteMacroBtn">Delete</button>
+        <input type="file" id="importMacroFile" style="display:none" accept=".json" onchange="importMacroFile()">
+        <button id="importMacroBtn">Import Macro</button>
+        <button id="exportMacroBtn">Export Macro</button>
+        <button id="downloadMacroFromGitHubBtn">Download Macro from GitHub</button>
+    </div>
+    <div class="section">
+        <h2>Macro Log <span style="font-size:0.8em; color:#888;">(Live WebSocket)</span></h2>
+        <pre id="macroLog" style="white-space:pre-wrap;"></pre>
+    </div>
+    <div class="section">
+        <h2>Macro Editor (Blockly)</h2>
+        <form id="macroForm">
+            <label>Name:</label><input id="macroName" required><br>
+            <label>Description:</label><input id="macroDesc"><br>
+            <label>End-of-Loop Macro Name:</label><input id="macroEOLName"><button type="button" id="editEOLBtn">Edit End-of-Loop Macro</button><br>
+            <div id="blocklyDiv"></div>
+            <button type="button" id="moveBlockUpBtn">Move Up</button>
+            <button type="button" id="moveBlockDownBtn">Move Down</button>
+            <button type="button" id="clearMacroEditorBtn">Clear</button>
+            <button type="submit" id="saveMacroBtn">Save Macro</button>
+        </form>
+    </div>
+    <div id="eolMacroModal" style="display:none; position:fixed; top:10%; left:50%; transform:translateX(-50%); background:#23272f; border:2px solid #4e8cff; border-radius:8px; z-index:1000; padding:2em; min-width:600px;">
+        <h3>Edit End-of-Loop Macro: <span id="eolMacroName"></span></h3>
+        <div id="eolBlocklyDiv" style="height:300px; width:100%; min-width:500px; background:#23272f; border:1px solid #444; margin-bottom:1em;"></div>
+        <button id="saveEOLMacroBtn">Save</button>
+        <button id="closeEOLModalBtn">Cancel</button>
+    </div>
+    <script type="module" src="/static/main.js"></script>
+</body>
+</html> 

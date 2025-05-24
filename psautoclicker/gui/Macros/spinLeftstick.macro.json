@@ -1,0 +1,85 @@
+{
+  "name": "spinLeftstick",
+  "steps": [
+    [
+      "CIRCLE",
+      250,
+      "Unpauses the game if paused"
+    ],
+    [
+      [
+        "LEFT_STICK",
+        "LEFT",
+        1.0
+      ],
+      9000,
+      "Move left stick left for 4 seconds"
+    ],
+    [
+      [
+        "LEFT_STICK",
+        "NEUTRAL",
+        0.0
+      ],
+      50,
+      "Return left stick to neutral"
+    ],
+    [
+      [
+        "LEFT_STICK",
+        "RIGHT",
+        1.0
+      ],
+      9000,
+      "Move left stick right for 4 seconds"
+    ],
+    [
+      [
+        "LEFT_STICK",
+        "NEUTRAL",
+        0.0
+      ],
+      50,
+      "Return left stick to neutral"
+    ],
+    [
+      [
+        "LEFT_STICK",
+        "UP",
+        1.0
+      ],
+      9000,
+      "Move left stick forward for 4 seconds"
+    ],
+    [
+      [
+        "LEFT_STICK",
+        "NEUTRAL",
+        0.0
+      ],
+      50,
+      "Return left stick to neutral"
+    ],
+    [
+      [
+        "LEFT_STICK",
+        "DOWN",
+        1.0
+      ],
+      9000,
+      "Move left stick backward for 4 seconds"
+    ],
+    [
+      [
+        "LEFT_STICK",
+        "NEUTRAL",
+        0.0
+      ],
+      50,
+      "Return left stick to neutral"
+    ]
+  ],
+  "end_of_loop_macro": [],
+  "end_of_loop_macro_name": null,
+  "description": "Great for training athletics in oblivion."
+}

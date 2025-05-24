@@ -1,0 +1,34 @@
+PSAutoClicker-Web Feature List
+=============================
+
+This file tracks the current feature set and progress for the PSAutoClicker web port.
+
+Core Features (all implemented):
+-------------------------------
+- Device management (add/edit/remove/select/connect/disconnect, persistent saved_ips.json)
+- Manual controls (button, stick, stick duration/auto-reset)
+- Manual autoclicker (standalone, interval/duration)
+- Macro CRUD (create, edit, delete, run, refresh)
+- Macro import/export (JSON, file upload/download)
+- Macro step reordering (up/down in Blockly)
+- Macro logic: simultaneous actions, autoclicker steps, stick steps, comments, end-of-loop macros, real-time execution logs
+- Repeat N times macro step (Blockly block, backend support)
+- End-of-loop macro editing (dedicated Blockly modal)
+- Download macro from GitHub (raw URL)
+- Color-coded macro logs (real-time, by type)
+- Config self-healing (saved_ips.json, Macros dir)
+- Macro file renaming (via save)
+- Favicon served from app_icon.ico
+- Modern, dark-mode, mobile-friendly web UI
+- LLM-friendly code structure, modularity, and documentation
+
+Enhancements over original:
+--------------------------
+- Blockly-based macro editor (visual, drag-and-drop)
+- Color-coded logs for easier debugging
+- GitHub macro download for easy sharing
+- End-of-loop macro editing via modal
+- Robust config self-healing and error handling
+- Modular backend and frontend structure
+
+All features from the original PSAutoClicker are present and functionally equivalent or improved. 

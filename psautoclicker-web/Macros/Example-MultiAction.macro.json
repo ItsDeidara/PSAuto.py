@@ -1,0 +1,13 @@
+{
+  "name": "Example-MultiAction",
+  "description": "Example macro: demonstrates simultaneous button presses and joystick movement. Each step includes a comment explaining the action.",
+  "steps": [
+    [["CROSS", "CIRCLE", ["LEFT_STICK", "UP", 1.0]], 500, "Press CROSS and CIRCLE while moving Left Stick Up simultaneously for 500ms."],
+    ["TRIANGLE", 200, "Press Triangle button."],
+    [["SQUARE", ["RIGHT_STICK", "RIGHT", 1.0]], 300, "Press Square and move Right Stick Right at the same time."],
+    [[["LEFT_STICK", "LEFT", 1.0], ["RIGHT_STICK", "UP", 1.0]], 400, "Move Left Stick Left and Right Stick Up at the same time."],
+    [[["LEFT_STICK", "NEUTRAL", 0.0], ["RIGHT_STICK", "NEUTRAL", 0.0]], 100, "Return both sticks to neutral."]
+  ],
+  "end_of_loop_macro": [],
+  "end_of_loop_macro_name": null
+} 

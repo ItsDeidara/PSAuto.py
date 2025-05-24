@@ -1,0 +1,14 @@
+{
+  "name": "ItemDuplication",
+  "description": "Automates item duplication in Oblivion Remastered on PS5 using a container glitch. Assumes player is facing a container with one item and has a stack of arrows in inventory.",
+  "steps": [
+    ["CROSS", 300, "Interact with container to open it"],
+    ["CIRCLE", 300, "Exit container to return to game"],
+    ["OPTIONS", 300, "Open player inventory"],
+    [["LEFT_STICK", "DOWN", 1.0], 200, "Navigate to stack of arrows"],
+    [["LEFT_STICK", "NEUTRAL", 0.0], 50, "Return stick to neutral"],
+    [["R1", "CROSS"], 300, "Press R1 and CROSS simultaneously to trigger quantity menu glitch"],
+    ["CROSS", 300, "Withdraw duplicated item from container"],
+    ["CIRCLE", 300, "Exit inventory"]
+  ]
+}

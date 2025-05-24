@@ -214,23 +214,11 @@ class PSRemotePlayGUI(tk.Tk):
         self.auto_interval_entry = ttk.Entry(auto_frm, textvariable=self.auto_interval_var, width=6)
         self.auto_interval_entry.grid(row=0, column=3, padx=2)
         ToolTip(self.auto_interval_entry, "Enter the time between presses (100 ms = 0.1 second). Minimum is 10 ms.")
-        # Repeat count and infinite option
-        auto_repeat_label = ttk.Label(auto_frm, text="Repeat Count:")
-        auto_repeat_label.grid(row=0, column=4, sticky="w", padx=(10,0))
-        ToolTip(auto_repeat_label, "How many times to repeat the autoclick. Use 'Infinite' to run until stopped.")
-        self.auto_repeat_var = tk.StringVar(value="1")
-        self.auto_repeat_entry = ttk.Entry(auto_frm, textvariable=self.auto_repeat_var, width=6)
-        self.auto_repeat_entry.grid(row=0, column=5, padx=2)
-        ToolTip(self.auto_repeat_entry, "Number of times to autoclick. 1 = once. -1 or Infinite = endless.")
-        self.auto_infinite_var = tk.BooleanVar(value=False)
-        auto_infinite_check = ttk.Checkbutton(auto_frm, text="Infinite", variable=self.auto_infinite_var, command=lambda: self.auto_repeat_var.set("-1") if self.auto_infinite_var.get() else self.auto_repeat_var.set("1"))
-        auto_infinite_check.grid(row=0, column=6, padx=2)
-        ToolTip(auto_infinite_check, "Check for infinite autoclicking.")
         self.auto_start_btn = ttk.Button(auto_frm, text="Start", command=self.start_autoclicker)
-        self.auto_start_btn.grid(row=0, column=7, padx=2)
+        self.auto_start_btn.grid(row=0, column=4, padx=2)
         ToolTip(self.auto_start_btn, "Start the autoclicker.")
         self.auto_stop_btn = ttk.Button(auto_frm, text="Stop", command=self.stop_autoclicker, state=tk.DISABLED)
-        self.auto_stop_btn.grid(row=0, column=8, padx=2)
+        self.auto_stop_btn.grid(row=0, column=5, padx=2)
         ToolTip(self.auto_stop_btn, "Stop the autoclicker.")
         # Log area (now in Controls tab)
         self.log_area = scrolledtext.ScrolledText(frm, height=8, state=tk.DISABLED)
@@ -241,95 +229,51 @@ class PSRemotePlayGUI(tk.Tk):
         macro_tab = ttk.Frame(nb)
         nb.add(macro_tab, text="Macro Manager")
         macro_tab.grid_rowconfigure(0, weight=1)
-        macro_tab.grid_columnconfigure(0, minsize=320, weight=0)  # Left column fixed width
-        macro_tab.grid_columnconfigure(1, weight=1)  # Right column expands
-
-        # LEFT: Macro List + Actions
-        macro_left_frm = ttk.Frame(macro_tab)
-        macro_left_frm.grid(row=0, column=0, sticky="nswe", padx=(8, 8), pady=8)
-        macro_left_frm.grid_rowconfigure(1, weight=1)
-        macro_left_frm.grid_columnconfigure(0, weight=1)
-        macro_list_label = ttk.Label(macro_left_frm, text="Saved Macros:")
-        macro_list_label.grid(row=0, column=0, sticky="w", pady=(0, 4))
+        macro_tab.grid_columnconfigure(0, weight=1)
+        macro_pane = ttk.PanedWindow(macro_tab, orient=tk.HORIZONTAL)
+        macro_pane.pack(fill="both", expand=True)
+        # Macro List (left)
+        macro_list_frm = ttk.Frame(macro_pane)
+        macro_list_frm.pack(fill="both", expand=True)
+        macro_list_label = ttk.Label(macro_list_frm, text="Saved Macros:")
+        macro_list_label.pack(anchor="w", padx=4, pady=(4, 0))
         ToolTip(macro_list_label, "List of all your saved macros. Select one to edit or run.")
-        macro_listbox_scroll = tk.Scrollbar(macro_left_frm, orient="vertical")
-        self.macro_listbox = tk.Listbox(macro_left_frm, selectmode=tk.SINGLE, height=20, yscrollcommand=macro_listbox_scroll.set, exportselection=False)
-        self.macro_listbox.grid(row=1, column=0, sticky="nswe")
-        macro_listbox_scroll.config(command=self.macro_listbox.yview)
-        macro_listbox_scroll.grid(row=1, column=1, sticky="ns")
-        # Macro Actions
-        macro_actions_frm = ttk.Frame(macro_left_frm)
-        macro_actions_frm.grid(row=2, column=0, columnspan=2, sticky="ew", pady=(8, 0))
-        macro_actions_frm.grid_columnconfigure(0, weight=1)
-        # Row 1: New, Load, Save
-        ttk.Button(macro_actions_frm, text="+ New", command=self.new_macro, style="Accent.TButton").grid(row=0, column=0, sticky="ew", padx=2, pady=2)
-        ttk.Button(macro_actions_frm, text="Load", command=self.on_macro_select).grid(row=0, column=1, sticky="ew", padx=2, pady=2)
-        ttk.Button(macro_actions_frm, text="Save", command=self.save_macro).grid(row=0, column=2, sticky="ew", padx=2, pady=2)
-        # Row 2: Import, Export, Download
-        ttk.Button(macro_actions_frm, text="Import", command=self.import_macro).grid(row=1, column=0, sticky="ew", padx=2, pady=2)
-        ttk.Button(macro_actions_frm, text="Export", command=self.export_macro).grid(row=1, column=1, sticky="ew", padx=2, pady=2)
-        ttk.Button(macro_actions_frm, text="Download from Git", command=self.download_macros_from_github).grid(row=1, column=2, sticky="ew", padx=2, pady=2)
-        # Row 3: Run, Stop
-        run_btn = tk.Button(macro_actions_frm, text="▶️ Run", command=self.run_selected_macros,
-                          font=("Segoe UI", 11, "bold"), fg="black", bg="white",
-                          highlightbackground="#28a745", highlightcolor="#28a745", highlightthickness=2, bd=0)
-        run_btn.grid(row=2, column=0, sticky="ew", padx=2, pady=2)
-        stop_btn = tk.Button(macro_actions_frm, text="⏹️ Stop", command=self.stop_selected_macros,
-                           font=("Segoe UI", 11, "bold"), fg="black", bg="white",
-                           highlightbackground="#dc3545", highlightcolor="#dc3545", highlightthickness=2, bd=0)
-        stop_btn.grid(row=2, column=1, sticky="ew", padx=2, pady=2)
-        # Padding for clarity
-        for i in range(3):
-            macro_actions_frm.grid_columnconfigure(i, weight=1)
-
-        # RIGHT: Macro Editor, Steps, Controls, End-of-Loop, Macro Log
-        macro_right_frm = ttk.Frame(macro_tab)
-        macro_right_frm.grid(row=0, column=1, sticky="nsew", padx=(0, 8), pady=8)
-        # Make right frame expand fully
-        macro_right_frm.grid_rowconfigure(4, weight=2)  # Steps area expands
-        macro_right_frm.grid_rowconfigure(8, weight=1)  # Macro log expands
-        macro_right_frm.grid_columnconfigure(0, weight=0)
-        macro_right_frm.grid_columnconfigure(1, weight=1)
-        macro_right_frm.grid_columnconfigure(2, weight=0)
-        # Macro Name/Description (top, now fills width)
-        macro_name_label = ttk.Label(macro_right_frm, text="Macro Name:")
-        macro_name_label.grid(row=0, column=0, sticky="w", pady=(0, 2), padx=(0, 2))
-        ToolTip(macro_name_label, "Enter a name for your macro. This will be used as the filename.")
-        self.macro_name_entry = ttk.Entry(macro_right_frm, textvariable=self.macro_name_var)
-        self.macro_name_entry.grid(row=0, column=1, columnspan=2, sticky="ew", pady=(0, 2), padx=(0, 4))
-        macro_desc_label = ttk.Label(macro_right_frm, text="Macro Description:")
-        macro_desc_label.grid(row=1, column=0, sticky="nw", pady=(0, 2), padx=(0, 2))
-        ToolTip(macro_desc_label, "Describe the purpose of this macro.")
-        self.macro_desc_text = scrolledtext.ScrolledText(macro_right_frm, wrap=tk.WORD, height=3)
-        self.macro_desc_text.grid(row=1, column=1, columnspan=2, sticky="ew", pady=(0, 6), padx=(0, 4))
-        ToolTip(self.macro_desc_text, "This description will be saved with the macro and shown in the preview.")
-        # --- Loop Controls (restored) ---
-        loop_frm = ttk.Frame(macro_right_frm)
-        loop_frm.grid(row=2, column=0, columnspan=3, sticky="ew", pady=(0, 6))
-        loop_frm.grid_columnconfigure(1, weight=0)
-        loop_frm.grid_columnconfigure(2, weight=0)
-        loop_frm.grid_columnconfigure(3, weight=1)
-        loop_label = ttk.Label(loop_frm, text="Loop Count:")
-        loop_label.grid(row=0, column=0, sticky="w", padx=(0, 2))
-        ToolTip(loop_label, "How many times to run the macro. 1 = once. -1 or Infinite = endless.")
-        self.macro_loop_count_var = tk.StringVar(value="1")
-        loop_entry = ttk.Entry(loop_frm, textvariable=self.macro_loop_count_var, width=6)
-        loop_entry.grid(row=0, column=1, sticky="w", padx=(0, 2))
-        ToolTip(loop_entry, "Number of times to run the macro. 1 = once. -1 or Infinite = endless.")
-        self.macro_infinite_var = tk.BooleanVar(value=False)
-        infinite_check = ttk.Checkbutton(loop_frm, text="Infinite", variable=self.macro_infinite_var, command=lambda: self.macro_loop_count_var.set("-1") if self.macro_infinite_var.get() else self.macro_loop_count_var.set("1"))
-        infinite_check.grid(row=0, column=2, sticky="w", padx=(0, 8))
-        ToolTip(infinite_check, "Check for infinite looping.")
-        # Macro Steps (center, resizable)
-        macro_steps_label = ttk.Label(macro_right_frm, text="Macro Steps:")
-        macro_steps_label.grid(row=3, column=0, sticky="w", pady=(0, 2))
+        self.macro_listbox = tk.Listbox(macro_list_frm, selectmode=tk.EXTENDED, height=12)
+        self.macro_listbox.pack(fill="both", expand=True, padx=4, pady=2)
+        macro_list_btns = ttk.Frame(macro_list_frm)
+        macro_list_btns.pack(fill="x", padx=4, pady=2)
+        load_btn = ttk.Button(macro_list_btns, text="Load", command=self.on_macro_select)
+        load_btn.pack(side="left", padx=2)
+        ToolTip(load_btn, "Load the selected macro for editing or running.")
+        save_btn = ttk.Button(macro_list_btns, text="Save", command=self.save_macro)
+        save_btn.pack(side="left", padx=2)
+        ToolTip(save_btn, "Save your changes to the current macro.")
+        import_btn = ttk.Button(macro_list_btns, text="Import", command=self.import_macro)
+        import_btn.pack(side="left", padx=2)
+        ToolTip(import_btn, "Import macros from files.")
+        export_btn = ttk.Button(macro_list_btns, text="Export", command=self.export_macro)
+        export_btn.pack(side="left", padx=2)
+        ToolTip(export_btn, "Export the selected macro to a file.")
+        run_btn = ttk.Button(macro_list_btns, text="Run Selected", command=self.run_selected_macros)
+        run_btn.pack(side="left", padx=2)
+        ToolTip(run_btn, "Start the selected macro(s).")
+        stop_btn = ttk.Button(macro_list_btns, text="Stop Selected", command=self.stop_selected_macros)
+        stop_btn.pack(side="left", padx=2)
+        ToolTip(stop_btn, "Stop the selected macro(s).")
+        # Add Download Macros from Git button
+        download_git_btn = ttk.Button(macro_list_btns, text="Download Macros from Git", command=self.download_macros_from_github)
+        download_git_btn.pack(side="left", padx=2)
+        ToolTip(download_git_btn, "Download the latest macros from the official GitHub repository. Any macros with the same name will be replaced.")
+        # Optionally, auto-load on selection:
+        self.macro_listbox.bind('<<ListboxSelect>>', self.on_macro_select)
+        macro_pane.add(macro_list_frm, weight=1)
+        # Macro Step Editor (right)
+        macro_edit_frm = ttk.Frame(macro_pane)
+        macro_edit_frm.pack(fill="both", expand=True)
+        macro_steps_label = ttk.Label(macro_edit_frm, text="Macro Steps:")
+        macro_steps_label.pack(anchor="w", padx=4, pady=(4, 0))
         ToolTip(macro_steps_label, "Steps in the selected macro. Each step is a button press, stick move, or autoclicker.")
-        steps_frm = ttk.Frame(macro_right_frm)
-        steps_frm.grid(row=4, column=0, columnspan=3, sticky="nswe", pady=(0, 2))
-        steps_frm.grid_rowconfigure(0, weight=1)
-        steps_frm.grid_columnconfigure(0, weight=1)
-        steps_scroll = tk.Scrollbar(steps_frm, orient="vertical")
-        self.macro_steps_tree = ttk.Treeview(steps_frm, columns=("Type", "Name/Dir", "Mag", "Delay", "Comment"), show="headings", selectmode="browse", height=10, yscrollcommand=steps_scroll.set)
+        self.macro_steps_tree = ttk.Treeview(macro_edit_frm, columns=("Type", "Name/Dir", "Mag", "Delay", "Comment"), show="headings", selectmode="browse", height=10)
         self.macro_steps_tree.heading("Type", text="Type")
         self.macro_steps_tree.heading("Name/Dir", text="Name/Direction")
         self.macro_steps_tree.heading("Mag", text="Magnitude")
@@ -340,34 +284,25 @@ class PSRemotePlayGUI(tk.Tk):
         self.macro_steps_tree.column("Mag", width=70)
         self.macro_steps_tree.column("Delay", width=80)
         self.macro_steps_tree.column("Comment", width=180)
-        self.macro_steps_tree.grid(row=0, column=0, sticky="nsew")
-        steps_scroll.config(command=self.macro_steps_tree.yview)
-        steps_scroll.grid(row=0, column=1, sticky="ns")
+        self.macro_steps_tree.pack(fill="both", expand=True, padx=4, pady=2)
         ToolTip(self.macro_steps_tree, "Shows all the steps in your macro. Double-click to edit. Comments explain each step.")
-        # Macro Step Controls
-        macro_step_btns = ttk.Frame(macro_right_frm)
-        macro_step_btns.grid(row=5, column=0, columnspan=3, sticky="ew", pady=(0, 6))
-        add_step_btn = ttk.Button(macro_step_btns, text="Add Step", command=self.add_macro_step_dialog)
-        add_step_btn.pack(side="left", padx=2)
-        ToolTip(add_step_btn, "Add a new step to the macro.")
-        edit_step_btn = ttk.Button(macro_step_btns, text="Edit Step", command=self.edit_macro_step)
-        edit_step_btn.pack(side="left", padx=2)
-        ToolTip(edit_step_btn, "Edit the selected step.")
-        remove_step_btn = ttk.Button(macro_step_btns, text="Remove Step", command=self.remove_macro_step)
-        remove_step_btn.pack(side="left", padx=2)
-        ToolTip(remove_step_btn, "Delete the selected step from the macro.")
-        move_up_btn = ttk.Button(macro_step_btns, text="Move Up", command=self.move_macro_step_up)
-        move_up_btn.pack(side="left", padx=2)
-        ToolTip(move_up_btn, "Move the selected step up.")
-        move_down_btn = ttk.Button(macro_step_btns, text="Move Down", command=self.move_macro_step_down)
-        move_down_btn.pack(side="left", padx=2)
-        ToolTip(move_down_btn, "Move the selected step down.")
-        repeat_btn = ttk.Button(macro_step_btns, text="Repeat Step", command=self.repeat_macro_step)
-        repeat_btn.pack(side="left", padx=2)
-        ToolTip(repeat_btn, "Duplicate the selected step.")
-        # End-of-Loop Macro Controls
-        eol_frm = ttk.LabelFrame(macro_right_frm, text="End-of-Loop Macro")
-        eol_frm.grid(row=6, column=0, columnspan=3, sticky="ew", pady=(0, 6))
+        # Loop count controls
+        loop_frm = ttk.Frame(macro_edit_frm)
+        loop_frm.pack(fill="x", padx=4, pady=2)
+        loop_label = ttk.Label(loop_frm, text="Loop Count:")
+        loop_label.pack(side="left")
+        ToolTip(loop_label, "How many times to repeat the macro. Use 'Infinite' for endless loops.")
+        self.macro_loop_count_var = tk.StringVar(value="1")
+        self.macro_infinite_var = tk.BooleanVar(value=False)
+        loop_entry = ttk.Entry(loop_frm, textvariable=self.macro_loop_count_var, width=5)
+        loop_entry.pack(side="left", padx=2)
+        ToolTip(loop_entry, "Enter the number of times to run the macro. -1 means infinite.")
+        inf_check = ttk.Checkbutton(loop_frm, text="Infinite", variable=self.macro_infinite_var, command=lambda: self.macro_loop_count_var.set("-1") if self.macro_infinite_var.get() else self.macro_loop_count_var.set("1"))
+        inf_check.pack(side="left", padx=2)
+        ToolTip(inf_check, "Check for infinite macro looping.")
+        # End-of-loop macro controls
+        eol_frm = ttk.LabelFrame(macro_edit_frm, text="End-of-Loop Macro")
+        eol_frm.pack(fill="x", padx=4, pady=4)
         ToolTip(eol_frm, "Add extra steps or another macro to run at the end of each loop.")
         eol_label = ttk.Label(eol_frm, text="Use saved macro:")
         eol_label.pack(side="left")
@@ -387,18 +322,45 @@ class PSRemotePlayGUI(tk.Tk):
         self.eol_macro_steps_tree.pack(fill="x", padx=2, pady=2)
         ToolTip(self.eol_macro_steps_tree, "Shows the steps for the end-of-loop macro.")
         self.eol_macro_var.trace_add("write", lambda *_: self.update_eol_macro_steps_tree())
-        # Macro Log (bottom, always visible, expands)
-        macro_log_label = ttk.Label(macro_right_frm, text="Macro Log:")
-        macro_log_label.grid(row=7, column=0, sticky="w", pady=(0, 2))
-        self.macro_log_area = scrolledtext.ScrolledText(macro_right_frm, height=8, state=tk.DISABLED, wrap=tk.WORD)
-        self.macro_log_area.grid(row=8, column=0, columnspan=3, sticky="nsew")
-        ToolTip(self.macro_log_area, "Shows macro-specific logs, including step comments and execution details.")
-        # Status bar at the bottom
+        macro_step_btns = ttk.Frame(macro_edit_frm)
+        macro_step_btns.pack(fill="x", padx=4, pady=2)
+        add_step_btn = ttk.Button(macro_step_btns, text="Add Step", command=self.add_macro_step_dialog)
+        add_step_btn.pack(side="left", padx=2)
+        ToolTip(add_step_btn, "Add a new step to the macro.")
+        edit_step_btn = ttk.Button(macro_step_btns, text="Edit Step", command=self.edit_macro_step)
+        edit_step_btn.pack(side="left", padx=2)
+        ToolTip(edit_step_btn, "Edit the selected step.")
+        remove_step_btn = ttk.Button(macro_step_btns, text="Remove Step", command=self.remove_macro_step)
+        remove_step_btn.pack(side="left", padx=2)
+        ToolTip(remove_step_btn, "Delete the selected step from the macro.")
+        move_up_btn = ttk.Button(macro_step_btns, text="Move Up", command=self.move_macro_step_up)
+        move_up_btn.pack(side="left", padx=2)
+        ToolTip(move_up_btn, "Move the selected step up.")
+        move_down_btn = ttk.Button(macro_step_btns, text="Move Down", command=self.move_macro_step_down)
+        move_down_btn.pack(side="left", padx=2)
+        ToolTip(move_down_btn, "Move the selected step down.")
+        repeat_btn = ttk.Button(macro_step_btns, text="Repeat Step", command=self.repeat_macro_step)
+        repeat_btn.pack(side="left", padx=2)
+        ToolTip(repeat_btn, "Duplicate the selected step.")
+        macro_edit_frm.grid_rowconfigure(1, weight=1)
+        macro_edit_frm.grid_columnconfigure(0, weight=1)
+        macro_pane.add(macro_edit_frm, weight=3)
+        # Macro state
+        self.refresh_macro_list()
+        self.update_eol_macro_steps_tree()
+        # Macro-level description field
+        macro_desc_label = ttk.Label(macro_edit_frm, text="Macro Description:")
+        macro_desc_label.pack(anchor="w", padx=4, pady=(4, 0))
+        ToolTip(macro_desc_label, "Describe the purpose of this macro.")
+        # Replace single-line Entry with a multi-line, word-wrapped ScrolledText
+        self.macro_desc_text = scrolledtext.ScrolledText(macro_edit_frm, wrap=tk.WORD, width=40, height=4)
+        self.macro_desc_text.pack(fill="x", padx=4, pady=(0, 4))
+        ToolTip(self.macro_desc_text, "This description will be saved with the macro and shown in the preview.")
+
+        # ... after macro_edit_frm.pack(fill="both", expand=True)
         self.macro_status_var = tk.StringVar(value="No macro selected.")
         self.macro_status_label = ttk.Label(macro_tab, textvariable=self.macro_status_var, anchor="w", font=("Segoe UI", 10, "bold"))
-        self.macro_status_label.grid(row=1, column=0, columnspan=2, sticky="ew", padx=4, pady=2)
-
-        self.macro_listbox.bind('<<ListboxSelect>>', self.on_macro_select)
+        self.macro_status_label.pack(fill="x", side="bottom", padx=4, pady=2)
 
     def set_macro_status(self, status, color="black"):
         self.macro_status_var.set(status)
@@ -433,7 +395,6 @@ class PSRemotePlayGUI(tk.Tk):
             self.log_area.tag_configure("success", foreground="green")
             self.log_area.tag_configure("warning", foreground="orange")
             self.log_area.tag_configure("error", foreground="red")
-            self.log_area.tag_configure("step_comment", foreground="magenta")
         self.log_area.insert(tk.END, msg + '\n', tag)
         self.log_area.see(tk.END)
         self.log_area.config(state=tk.DISABLED)
@@ -446,8 +407,6 @@ class PSRemotePlayGUI(tk.Tk):
             print(Fore.YELLOW + msg)
         elif level == "error":
             print(Fore.RED + msg)
-        elif level == "step_comment":
-            print(Fore.MAGENTA + msg)
         else:
             print(msg)
 
@@ -540,14 +499,7 @@ class PSRemotePlayGUI(tk.Tk):
         except ValueError:
             self.log("Invalid interval.", level="error")
             return
-        # Get repeat count
-        try:
-            repeat_count = int(self.auto_repeat_var.get())
-        except Exception:
-            repeat_count = 1
-        if self.auto_infinite_var.get():
-            repeat_count = -1
-        self.autoclicker = Autoclicker(self.command_queue, btn_code, interval, self.log, repeat_count=repeat_count)
+        self.autoclicker = Autoclicker(self.command_queue, btn_code, interval, self.log)
         self.autoclicker.start()
         self.auto_start_btn.config(state=tk.DISABLED)
         self.auto_stop_btn.config(state=tk.NORMAL)
@@ -847,11 +799,7 @@ class PSRemotePlayGUI(tk.Tk):
         for a in actions:
             if isinstance(a, dict) and a.get('type') == 'autoclicker':
                 actions_listbox.insert(tk.END, f"Autoclicker: {a['button']} {a['interval']}ms dur={a.get('duration')}")
-            elif (
-                isinstance(a, (tuple, list))
-                and len(a) == 3
-                and a[0] in ("LEFT_STICK", "RIGHT_STICK")
-            ):
+            elif isinstance(a, tuple):
                 actions_listbox.insert(tk.END, f"Stick: {a[0]} {a[1]} {a[2]}")
             else:
                 actions_listbox.insert(tk.END, f"Button: {a}")
@@ -1007,23 +955,18 @@ class PSRemotePlayGUI(tk.Tk):
             else:
                 self.eol_macro_steps_tree.insert("", "end", iid=str(i), values=("Button", str(code), "-", str(delay), comment))
 
-    def _clean_macro_name(self, label):
-        # Helper to strip [RUNNING] and [SELECTED] from macro listbox labels
-        return label.replace(" [RUNNING]", "").replace(" [SELECTED]", "").strip()
-
     def on_macro_select(self, event=None):
         sel = self.macro_listbox.curselection()
         if not sel:
             self.log("No macro selected to load.", level="warning")
             return
         idx = sel[0]
-        name = self._clean_macro_name(self.macro_listbox.get(idx))
+        name = self.macro_listbox.get(idx).replace(" [RUNNING]", "").strip()
         macro = self.macros.get(name)
         if not macro:
             self.log(f"Macro not found: {name}", level="error")
             return
         self.macro_name_var.set(macro.name)
-        self.macro_name_entry.config(state="normal")  # Allow editing
         self.current_macro_steps = macro.steps.copy()
         # Set description in the ScrolledText widget
         self.macro_desc_text.delete("1.0", tk.END)
@@ -1040,19 +983,6 @@ class PSRemotePlayGUI(tk.Tk):
             self.eol_macro_var.set("None")
             self.current_eol_macro_steps = []
         self.update_eol_macro_steps_tree()
-        # Update macro list to show [SELECTED] on the selected macro
-        for i in range(self.macro_listbox.size()):
-            item_name = self._clean_macro_name(self.macro_listbox.get(i))
-            label = item_name
-            if item_name in self.running_macros:
-                label += " [RUNNING]"
-            if i == idx:
-                label += " [SELECTED]"
-            self.macro_listbox.delete(i)
-            self.macro_listbox.insert(i, label)
-        self.macro_listbox.selection_clear(0, tk.END)
-        self.macro_listbox.selection_set(idx)
-        self.macro_listbox.activate(idx)
         self.log(f"Loaded macro: {macro.name}", level="success")
         if name in self.running_macros:
             self.set_macro_status(f"Macro '{name}' is running.", color="green")
@@ -1198,13 +1128,14 @@ class PSRemotePlayGUI(tk.Tk):
         )
 
     def save_macro(self):
+        """Save the current macro to disk and update the macro list."""
         name = self.macro_name_var.get().strip()
         if not name:
             self.log("Macro name required.", level="warning")
             return
-        self.macro_name_entry.config(state="normal")
         steps = self.current_macro_steps.copy()
         description = self.macro_desc_text.get("1.0", tk.END).strip()
+        # End-of-loop macro
         eol_macro_name = self.eol_macro_var.get()
         if eol_macro_name == "None":
             eol_macro = []
@@ -1228,16 +1159,8 @@ class PSRemotePlayGUI(tk.Tk):
         try:
             macro.save(macro_path)
             self.macros[name] = macro
-            prev_selection = name
             self.refresh_macro_list()
-            if prev_selection in self.macros:
-                idx = list(sorted(self.macros.keys())).index(prev_selection)
-                self.macro_listbox.selection_clear(0, tk.END)
-                self.macro_listbox.selection_set(idx)
-                self.macro_listbox.activate(idx)
-                self.on_macro_select()
             self.log(f"Saved macro: {name}", level="success")
-            messagebox.showinfo("Macro Saved", f"Macro '{name}' was saved successfully.")
         except Exception as e:
             self.log(f"Failed to save macro: {e}", level="error")
 
@@ -1358,8 +1281,7 @@ class PSRemotePlayGUI(tk.Tk):
     def refresh_macro_list(self):
         macros_dir = resource_path('Macros')
         os.makedirs(macros_dir, exist_ok=True)
-        print(Fore.CYAN + f"[DEBUG] Scanning for macros in: {macros_dir}")
-        print(Fore.CYAN + "[DEBUG] Checking for .json files to auto-fix to .macro.json...")
+        # Auto-rename .json files that do not end with .macro.json
         for path in glob.glob(os.path.join(macros_dir, '*.json')):
             if not path.endswith('.macro.json'):
                 new_path = path[:-5] + '.macro.json'
@@ -1369,10 +1291,6 @@ class PSRemotePlayGUI(tk.Tk):
                         self.log(f"Renamed {os.path.basename(path)} to {os.path.basename(new_path)} for macro detection.", level="info")
                     except Exception as e:
                         self.log(f"Failed to rename {os.path.basename(path)}: {e}", level="error")
-        prev_selection = None
-        sel = self.macro_listbox.curselection()
-        if sel:
-            prev_selection = self._clean_macro_name(self.macro_listbox.get(sel[0]))
         self.macros.clear()
         for path in glob.glob(os.path.join(macros_dir, '*.macro.json')):
             try:
@@ -1382,40 +1300,18 @@ class PSRemotePlayGUI(tk.Tk):
                 self.log(f"Failed to load macro {os.path.basename(path)}: {e}", level="error")
         self.macro_listbox.delete(0, tk.END)
         for name in sorted(self.macros.keys()):
-            label = name
-            if name in self.running_macros:
-                label += " [RUNNING]"
-            if prev_selection and name == prev_selection:
-                label += " [SELECTED]"
-            self.macro_listbox.insert(tk.END, label)
+            self.macro_listbox.insert(tk.END, name)
+        # Update end-of-loop macro choices
         eol_choices = ["None", "Custom"] + sorted(self.macros.keys())
         self.eol_macro_combo['values'] = eol_choices
-        if self.macros:
-            idx_to_select = 0
-            if prev_selection and prev_selection in self.macros:
-                idx_to_select = list(sorted(self.macros.keys())).index(prev_selection)
-            self.macro_listbox.selection_clear(0, tk.END)
-            self.macro_listbox.selection_set(idx_to_select)
-            self.macro_listbox.activate(idx_to_select)
-            self.on_macro_select()
-        else:
-            self.macro_name_var.set("")
-            self.macro_name_entry.config(state="normal")
-            self.current_macro_steps = []
-            self.current_eol_macro_steps = []
-            self.macro_desc_text.delete("1.0", tk.END)
-            self.eol_macro_var.set("None")
-            self.update_macro_steps_tree()
-            self.update_eol_macro_steps_tree()
 
     def run_selected_macros(self):
         sel = self.macro_listbox.curselection()
         if not sel:
             self.log("No macro(s) selected to run.", level="warning")
             return
-        prev_selection = self._clean_macro_name(self.macro_listbox.get(sel[0]))
         for idx in sel:
-            name = self._clean_macro_name(self.macro_listbox.get(idx))
+            name = self.macro_listbox.get(idx).replace(" [RUNNING]", "").strip()
             macro = self.macros.get(name)
             if not macro:
                 self.log(f"Macro not found: {name}", level="error")
@@ -1423,6 +1319,7 @@ class PSRemotePlayGUI(tk.Tk):
             if name in self.running_macros:
                 self.set_macro_status(f"Macro '{name}' is already running.", color="orange")
                 continue
+            # Get loop count
             try:
                 loop_count = int(self.macro_loop_count_var.get())
             except Exception:
@@ -1437,7 +1334,7 @@ class PSRemotePlayGUI(tk.Tk):
             runner = MacroRunner(
                 self.command_queue,
                 macro,
-                lambda msg, level="info": (self.log(msg, level), self.macro_log(msg, level)),
+                self.log,
                 get_macro_by_name=lambda n: self.macros.get(n),
                 refresh_callback=self.refresh_macro_list,
                 loop_progress_callback=loop_progress_callback
@@ -1451,41 +1348,28 @@ class PSRemotePlayGUI(tk.Tk):
                 self.set_macro_status(f"Macro '{name}' is looping infinitely.", color="blue")
             else:
                 self.set_macro_status(f"Macro '{name}' is running ({loop_count} loops).", color="green")
-        # Restore selection after run
-        if prev_selection in self.macros:
-            idx = list(sorted(self.macros.keys())).index(prev_selection)
-            self.macro_listbox.selection_clear(0, tk.END)
-            self.macro_listbox.selection_set(idx)
-            self.macro_listbox.activate(idx)
-            self.on_macro_select()
+        self.macro_listbox.selection_clear(0, tk.END)
 
     def stop_selected_macros(self):
         if not self.running_macros:
             self.log("No macros are currently running.", level="warning")
             return
+        # Make a list to avoid changing dict size during iteration
         running_names = list(self.running_macros.keys())
-        prev_selection = None
-        sel = self.macro_listbox.curselection()
-        if sel:
-            prev_selection = self._clean_macro_name(self.macro_listbox.get(sel[0]))
         for name in running_names:
             runner = self.running_macros.get(name)
             if runner:
                 runner.stop()
                 del self.running_macros[name]
+                # Remove [RUNNING] tag in the listbox
                 for idx in range(self.macro_listbox.size()):
-                    item_name = self._clean_macro_name(self.macro_listbox.get(idx))
+                    item_name = self.macro_listbox.get(idx).replace(" [RUNNING]", "").strip()
                     if item_name == name:
                         self.macro_listbox.delete(idx)
                         self.macro_listbox.insert(idx, name)
                         break
                 self.set_macro_status(f"Macro '{name}' stopped.", color="red")
-        if prev_selection in self.macros:
-            idx = list(sorted(self.macros.keys())).index(prev_selection)
-            self.macro_listbox.selection_clear(0, tk.END)
-            self.macro_listbox.selection_set(idx)
-            self.macro_listbox.activate(idx)
-            self.on_macro_select()
+        self.macro_listbox.selection_clear(0, tk.END)
 
     def edit_eol_macro_dialog(self):
         # Dialog for editing end-of-loop macro steps (self.current_eol_macro_steps)
@@ -1579,35 +1463,6 @@ class PSRemotePlayGUI(tk.Tk):
         ttk.Button(dialog, text="OK", command=dialog.destroy).grid(row=2, column=2, pady=8)
         dialog.wait_window()
         self.update_eol_macro_steps_tree()
-
-    def new_macro(self):
-        """Clear the macro editor for a new macro."""
-        self.macro_name_var.set("")
-        self.macro_name_entry.config(state="normal")
-        self.current_macro_steps = []
-        self.current_eol_macro_steps = []
-        self.macro_desc_text.delete("1.0", tk.END)
-        self.eol_macro_var.set("None")
-        self.update_macro_steps_tree()
-        self.update_eol_macro_steps_tree()
-        self.set_macro_status("Creating new macro.", color="blue")
-        self.log("Started a new macro.", level="info")
-        # Reset status after 2 seconds
-        self.after(2000, lambda: self.set_macro_status("Ready", color="black"))
-
-    # Add a method to log to the macro log area
-    def macro_log(self, msg, level="info"):
-        self.macro_log_area.config(state=tk.NORMAL)
-        tag = level
-        if not self.macro_log_area.tag_names():
-            self.macro_log_area.tag_configure("info", foreground="black")
-            self.macro_log_area.tag_configure("success", foreground="green")
-            self.macro_log_area.tag_configure("warning", foreground="orange")
-            self.macro_log_area.tag_configure("error", foreground="red")
-            self.macro_log_area.tag_configure("step_comment", foreground="magenta")
-        self.macro_log_area.insert(tk.END, msg + '\n', tag)
-        self.macro_log_area.see(tk.END)
-        self.macro_log_area.config(state=tk.DISABLED)
 
 def launch_gui():
     app = PSRemotePlayGUI()

@@ -1,0 +1,21 @@
+{
+  "name": "SpeechcraftFarming",
+  "description": "Automates one persuasion cycle to level Speechcraft in Oblivion Remastered on PS5. Assumes player is facing an NPC and persuasion is the first dialogue option.",
+  "steps": [
+    ["CROSS", 300, "Start dialogue with NPC"],
+    ["CROSS", 300, "Select persuasion option"],
+    [["LEFT_STICK", "RIGHT", 1.0], 200, "Rotate wheel to first option (Admire)"],
+    [["LEFT_STICK", "NEUTRAL", 0.0], 50, "Return stick to neutral"],
+    ["CROSS", 300, "Select Admire"],
+    [["LEFT_STICK", "RIGHT", 1.0], 200, "Rotate wheel to second option (Boast)"],
+    [["LEFT_STICK", "NEUTRAL", 0.0], 50, "Return stick to neutral"],
+    ["CROSS", 300, "Select Boast"],
+    [["LEFT_STICK", "RIGHT", 1.0], 200, "Rotate wheel to third option (Joke)"],
+    [["LEFT_STICK", "NEUTRAL", 0.0], 50, "Return stick to neutral"],
+    ["CROSS", 300, "Select Joke"],
+    [["LEFT_STICK", "RIGHT", 1.0], 200, "Rotate wheel to fourth option (Coerce)"],
+    [["LEFT_STICK", "NEUTRAL", 0.0], 50, "Return stick to neutral"],
+    ["CROSS", 300, "Select Coerce"],
+    ["CIRCLE", 300, "Exit dialogue"]
+  ]
+}

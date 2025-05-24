@@ -19,7 +19,9 @@ def install_requirements():
 
 if __name__ == "__main__":
     try:
-        install_requirements()
+        # Only check requirements if not running as a PyInstaller bundle
+        if not getattr(sys, 'frozen', False):
+            install_requirements()
     except Exception as e:
         print(f"Error checking/installing requirements: {e}")
         input("Press Enter to exit...")
